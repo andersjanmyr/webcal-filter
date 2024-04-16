@@ -66,6 +66,7 @@ function parseICS(icsString) {
         const line = lines[i].trim();
         if (line === 'BEGIN:VCALENDAR') {
             header = {}
+        } else if (line === 'END:VCALENDAR') {
         } else if (line === 'BEGIN:VEVENT') {
             event = {};
         } else if (line === 'END:VEVENT') {
