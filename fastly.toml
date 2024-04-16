@@ -6,9 +6,15 @@ cloned_from = "https://github.com/fastly/compute-starter-kit-javascript-default"
 description = "Filter WebCal feeds"
 language = "javascript"
 manifest_version = 3
-name = "webcal-filter"
-service_id = ""
+name = "pd-filter"
+service_id = "08oDrETM1P1cOQbn3PrH24"
 
 [scripts]
   build = "npm run build"
   post_init = "npm install"
+
+[local_server]
+  [local_server.backends]
+    [local_server.backends."smrt.pagerduty.com"]
+      url = "https://smrt.pagerduty.com/"
+      override_host = "smrt.pagerduty.com"
