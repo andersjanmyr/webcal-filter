@@ -37,16 +37,17 @@ async function handleRequest(event) {
         let beresp = await fetch(url.pathname, {
             backend: "smrt.pagerduty.com",
             cacheOverride,
+            headers: req.headers,
         });
         const filter = url.searchParams.get("filter") || "First";
         const feed = await beresp.text();
         console.log(feed);
-        const events = parseICS(feed);
+        const { header, events } = parseICS(feed);
         const filtered = events.filter(e => e.SUMMARY.includes(filter));
         console.log(filtered);
-        return new Response(toICS(filtered), {
+        return new Response(toICS(header, filtered), {
             status: 200,
-            headers: beresp.headers
+            headers: beresp.headers,
         });
     }
 
@@ -59,29 +60,45 @@ async function handleRequest(event) {
 function parseICS(icsString) {
     const lines = icsString.split('\n');
     const events = [];
-    let event; for (let i = 0; i < lines.length; i++) {
+    let header;
+    let event;
+    for (let i = 0; i < lines.length; i++) {
         const line = lines[i].trim();
-        if (line === 'BEGIN:VEVENT') {
+        if (line === 'BEGIN:VCALENDAR') {
+            header = {}
+        } else if (line === 'BEGIN:VEVENT') {
             event = {};
         } else if (line === 'END:VEVENT') {
             events.push(event);
             event = null;
+        } else if (event == undefined) {
+            addKeyValue(line, header);
         } else if (event) {
-            const match = /^([A-Z]+):(.*)$/.exec(line);
-            if (match) {
-                const [, key, value] = match; event[key] = value;
-            }
+            addKeyValue(line, event);
         }
     }
-    return events;
+    return { header, events };
 }
 
-function toICS(events) {
+function addKeyValue(line, event) {
+    const match = /^([^:]+):(.*)$/.exec(line);
+    if (match) {
+        const [, key, value] = match;
+        event[key] = value;
+    }
+}
+
+function toICS(headers, events) {
     const icsEvents = events.map(toEvent);
-    return `BEGIN:VCALENDAR\n${icsEvents.join("\n")}\nEND:VCALENDAR\n`;
+    return `BEGIN:VCALENDAR\n${toEntry(headers)}\n${icsEvents.join("\n")}\nEND:VCALENDAR\n`;
 }
 
 function toEvent(event) {
-    const entries = Object.keys(event).map((key) => `${key}:${event[key]}`);
-    return `BEGIN:VEVENT\n${entries.join("\n")}\nEND:VEVENT`;
+    const entry = toEntry(event);
+    return `BEGIN:VEVENT\n${entry}\nEND:VEVENT`;
 }
+
+function toEntry(event) {
+    return Object.keys(event).map((key) => `${key}:${event[key]}`).join("\n");
+}
+
