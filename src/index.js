@@ -33,8 +33,8 @@ async function handleRequest(event) {
 
     // webcal://smrt.pagerduty.com/private/XXXX/feed
     if (url.pathname.startsWith("/private")) {
-        const cacheOverride = new CacheOverride("override", { ttl: 60 });
-        let beresp = await fetch(req, {
+        const cacheOverride = new CacheOverride("override", { ttl: 3600 });
+        let beresp = await fetch(url.pathname, {
             backend: "smrt.pagerduty.com",
             cacheOverride,
         });
