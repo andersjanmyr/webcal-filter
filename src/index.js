@@ -41,10 +41,8 @@ async function handleRequest(event) {
         });
         const filter = url.searchParams.get("filter") || "First";
         const feed = await beresp.text();
-        console.log(feed);
         const { header, events } = parseICS(feed);
         const filtered = events.filter(e => e.SUMMARY.includes(filter));
-        console.log(filtered);
         return new Response(toICS(header, filtered), {
             status: 200,
             headers: beresp.headers,
@@ -91,12 +89,21 @@ function addKeyValue(line, event) {
 
 function toICS(headers, events) {
     const icsEvents = events.map(toEvent);
-    return `BEGIN:VCALENDAR\n${toEntry(headers)}\n${icsEvents.join("\n")}\nEND:VCALENDAR\n`;
+    return [
+        'BEGIN:VCALENDAR',
+        toEntry(headers),
+        icsEvents.join("\n"),
+        'END:VCALENDAR',
+        '',
+    ].join('\n');
 }
 
 function toEvent(event) {
-    const entry = toEntry(event);
-    return `BEGIN:VEVENT\n${entry}\nEND:VEVENT`;
+    return [
+        'BEGIN:VEVENT',
+        toEntry(event),
+        'END:VEVENT',
+    ].join('\n');
 }
 
 function toEntry(event) {
