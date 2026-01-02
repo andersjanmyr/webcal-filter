@@ -11,7 +11,7 @@
   },
   "scripts": {
     "prebuild": "webpack",
-    "build": "js-compute-runtime bin/index.js bin/main.wasm",
+    "build": "js-compute-runtime src/index.js bin/main.wasm",
     "deploy": "fastly compute publish"
   }
 }
